@@ -3,7 +3,7 @@
 A tool to view and parse through google location history.
 
 
-OStill very much in progress
+Still very much in progress
 
 TODO:
 * Write a script to automatically parse the history.json and do the import. (initially did that in vim)
