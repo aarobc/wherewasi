@@ -1,6 +1,12 @@
 
 version: '3'
 
+networks:
+  default:
+    external:
+      name: wherewasi
+
+
 services:
   nginx:
     image: nginx
@@ -19,6 +25,7 @@ services:
       image: mongo
       volumes:
           - ./db:/data/db
+          # - ./history.json:/data/history.json
 
   eve:
     image: aleksxp/docker-eve-python
