@@ -1,0 +1,6 @@
+history.json
+db
+
+src/node_modules
+src/node_modules/
+src/node_modules/*

@@ -1,0 +1,36 @@
+
+version: '3'
+
+services:
+  nginx:
+    image: nginx
+    volumes:
+      - ./src:/usr/share/nginx/html
+    working_dir: /usr/share/nginx/html
+    ports:
+      - "80:80"
+
+  me:
+    image: mongo-express
+    ports:
+      - "8081:8081"
+
+  mongo:
+      image: mongo
+      volumes:
+          - ./db:/data/db
+
+  eve:
+    image: aleksxp/docker-eve-python
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./settings.py:/usr/src/app/settings.py
+    depends_on:
+      - mongo
+
+  node:
+    image: node
+    volumes:
+      - ./src:/usr/src/myapp
+    working_dir: /usr/src/myapp
