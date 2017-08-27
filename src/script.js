@@ -3,9 +3,10 @@ class MapStuff {
   constructor(map){
     this.gmap = map
     this.circle = false
-    this.url = 'http://localhost:5000/mapped'
+    this.url = 'http://localhost:5000/'
     this.next = false
     this.markers = []
+    this.limit = 1001
   }
 
   where(){
@@ -15,7 +16,7 @@ class MapStuff {
         $near: {
           $geometry: {
             type: "Point",
-            coordinates: coords 
+            coordinates: coords
           },
           $maxDistance: this.circle.getRadius()
         }
@@ -24,65 +25,56 @@ class MapStuff {
     return JSON.stringify(data)
   }
 
-  // function initMap(){
-  //   map = new google.maps.Map(document.getElementById('map'), {
-  //     zoom: 9,
-  //     center: {lat: 40.455307, lng: -111.923218}
-  //   })
-  // }
 
+  recurse(points = [], addr = false){
+    return this.getPoints(addr)
+    .then(dat => {
+      points.push.apply(points, dat._items)
+      return dat
+    })
+    .then(dat => {
+        let href = dat._links.next.href
+        if(points.length > this.limit){
+          console.log("more than 1k records")
+          return points
+        }
+
+        return this.recurse(points, this.url + href)
+    })
+    .catch(e => {
+        // console.log("no more")
+        // console.log(points)
+        return points
+    })
+
+  }
 
   getIt(){
 
-    // let url = next || this.url '/mapped?where=' + this.where()
-    // console.log(url)
-    //
-    // return fetch(url)
-    // .then(resp => {
-    //   return resp.json()
-    // })
-    // .then(dat => {
-    //   // see if next value exists
-    //   let def = false
-    //   try{
-    //     let def = dat._links.next.href
-    //   }
-    //   catch(e){
-    //     console.log("no more")
-    //   }
-    //   console.log("try to recurse")
-    //   this.getIt(def)
-      // if(def){
-      //   return getIt(def)
-      // }
-      return dat._items.map(this.addPoints.bind(this))
-
-    // })
+    this.recurse()
+    .then(points => {
+      console.log(points)
+      return points.map(this.addPoints.bind(this))
+    })
+    .catch(e => {
+      console.log(e)
+    })
   }
 
-  getPoints(next = false){
+  getPoints(addr){
 
 
-    let url = next || this.url '/mapped?where=' + this.where()
+    let url = addr || this.url + "mapped?where=" + this.where()
     console.log(url)
 
     return fetch(url)
     .then(resp => {
       return resp.json()
     })
-    .then(dat => {
-      // see if next value exists
-      let def = false
-      try{
-        let def = dat._links.next.href
-      }
-      catch(e){
-        console.log("no more")
-      }
-      console.log("try to recurse")
-      this.getIt(def)
-
-
+    .catch(e => {
+      console.log(e)
+      return
+    })
   }
 
 
@@ -110,6 +102,7 @@ class MapStuff {
   goog(){
     //Add listener
     google.maps.event.addListener(this.gmap, "rightclick", event => {
+      console.log('rightclick')
       var latitude = event.latLng.lat()
       var longitude = event.latLng.lng()
 
@@ -127,7 +120,7 @@ class MapStuff {
         strokeOpacity: 0.8,
         strokeWeight: 2,
         draggable: true,
-        editable: true  
+        editable: true
       });
 
 
