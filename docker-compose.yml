@@ -6,6 +6,8 @@ networks:
     external:
       name: wherewasi
 
+volumes:
+  db:
 
 services:
   nginx:
@@ -24,7 +26,8 @@ services:
   mongo:
       image: mongo
       volumes:
-          - ./db:/data/db
+          # - ./db:/data/db
+          - db:/data/db
           # - ./history.json:/data/history.json
 
   eve:

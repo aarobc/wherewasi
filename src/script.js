@@ -22,7 +22,8 @@ class MapStuff {
         }
       }
     }
-    return JSON.stringify(data)
+
+    return JSON.stringify(data) + '&sort=[("timestamp", -1)]'
   }
 
 
@@ -42,8 +43,6 @@ class MapStuff {
         return this.recurse(points, this.url + href)
     })
     .catch(e => {
-        // console.log("no more")
-        // console.log(points)
         return points
     })
 
