@@ -22,7 +22,7 @@ class Modifer{
 
             each(cursor, (point, callb) => {
 
-                point.timestamp = Number(point.timestampMs)
+                point.created = new Date(Number(point.timestampMs))
                 let lat = point.latitudeE7 / 10000000
                 let lon = point.longitudeE7 / 10000000
 
