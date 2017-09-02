@@ -17,3 +17,27 @@ DOMAIN = {
 
     }
 }
+
+first = {
+    'datasource': {
+        'aggregation': {
+            'pipeline': [
+               { '$match':{
+                    'location': {
+                        '$near': {
+                            '$geometry': {
+                                'type': "Point",
+                                'coordinates': ["$lng", "$lat"]
+                            },
+                            '$maxDistance': this.circle.getRadius()
+                        }
+                    }
+                }},
+                {"$group": {
+
+                }}
+
+            ]
+        }
+    }
+}

@@ -25,4 +25,7 @@ echo "done"
 docker run --rm -it -v ${PWD}/$file:/tmp/$file --network=wherewasi mongo\
   mongoimport --collection points --db history --host mongo /tmp/$file
 
+
+docker-compose run --rm node node node.js
+
 rm -f $file

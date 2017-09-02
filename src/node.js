@@ -23,6 +23,8 @@ class Modifer{
             each(cursor, (point, callb) => {
 
                 point.created = new Date(Number(point.timestampMs))
+                point.date = point.created.toLocaleDateString('en-US')
+
                 let lat = point.latitudeE7 / 10000000
                 let lon = point.longitudeE7 / 10000000
 
@@ -70,6 +72,7 @@ runScan = () => {
     })
     .catch(e => {
         console.log(e)
+        console.log("errrdone")
     })
 }
 

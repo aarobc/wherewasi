@@ -23,7 +23,8 @@ class MapStuff {
       }
     }
 
-    return JSON.stringify(data) + '&sort=[("timestamp", -1)]'
+
+    return JSON.stringify(data)
   }
 
 
@@ -63,7 +64,7 @@ class MapStuff {
   getPoints(addr){
 
 
-    let url = addr || this.url + "mapped?where=" + this.where()
+    let url = addr || this.url + "mapped?aggregate=" + this.where()
     console.log(url)
 
     return fetch(url)
