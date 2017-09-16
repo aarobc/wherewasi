@@ -1,8 +1,7 @@
+'use strict'
 class MapStuff {
 
-  constructor(map){
-    this.gmap = map
-    this.circle = false
+  constructor(){
     this.url = 'http://localhost:5000/'
     this.next = false
     this.markers = []
@@ -56,9 +55,9 @@ class MapStuff {
       console.log(points)
       return points.map(this.addPoints.bind(this))
     })
-    .catch(e => {
-      console.log(e)
-    })
+    // .catch(e => {
+    //   console.log(e)
+    // })
   }
 
   getMost(){
@@ -107,68 +106,67 @@ class MapStuff {
 
 
 
-  addPoints(xy){
+  // addPoints(xy){
+  //
+  //   let where = {lat: xy.location[1], lng: xy.location[0]}
+  //   let marker = new this.google.maps.Marker({
+  //     position: where,
+  //     map: this.gmap
+  //   });
+  //   this.markers.push(marker)
+  //
+  //   this.gmap.panTo(where)
+  //   return "12"
+  // }
+  //
+  // clearMarkers(){
+  //   this.markers.map(mark => {
+  //     mark.visible = false
+  //     mark.setMap(null)
+  //   })
+  // }
 
-    let where = {lat: xy.location[1], lng: xy.location[0]}
-    let marker = new google.maps.Marker({
-      position: where,
-      map: this.gmap
-    });
-    this.markers.push(marker)
-
-    this.gmap.panTo(where)
-    return "12"
-  }
-
-  clearMarkers(){
-    this.markers.map(mark => {
-      mark.visible = false
-      mark.setMap(null)
-    })
-  }
-
-  goog(){
-    //Add listener
-    google.maps.event.addListener(this.gmap, "rightclick", event => {
-      console.log('rightclick')
-      var latitude = event.latLng.lat()
-      var longitude = event.latLng.lng()
-
-      if(this.circle){
-        return
-      }
-
-      this.circle = new google.maps.Circle({
-        map: this.gmap,
-        radius: 100,
-        center: event.latLng,
-        fillColor: '#777',
-        fillOpacity: 0.1,
-        strokeColor: '#AA0000',
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        draggable: true,
-        editable: true
-      });
-
-
-      google.maps.event.addListener(this.circle, 'radius_changed', () => {
-        // console.log(this.circle)
-        // console.log(this.circle.getRadius())
-        this.clearMarkers()
-        this.getIt()
-        // do the thing here
-      });
-
-      google.maps.event.addListener(this.circle, 'dragend', () => {
-        // console.log("dragend")
-        this.clearMarkers()
-        this.getIt()
-      });
-
-    })
-  }
+  // goog(){
+  //   //Add listener
+  //   this.google.maps.event.addListener(this.gmap, "rightclick", event => {
+  //     console.log('rightclick')
+  //     var latitude = event.latLng.lat()
+  //     var longitude = event.latLng.lng()
+  //
+  //     if(this.circle){
+  //       return
+  //     }
+  //
+  //     this.circle = new this.google.maps.Circle({
+  //       map: this.gmap,
+  //       radius: 100,
+  //       center: event.latLng,
+  //       fillColor: '#777',
+  //       fillOpacity: 0.1,
+  //       strokeColor: '#AA0000',
+  //       strokeOpacity: 0.8,
+  //       strokeWeight: 2,
+  //       draggable: true,
+  //       editable: true
+  //     });
+  //
+  //
+  //     google.maps.event.addListener(this.circle, 'radius_changed', () => {
+  //       // console.log(this.circle)
+  //       // console.log(this.circle.getRadius())
+  //       this.clearMarkers()
+  //       this.getIt()
+  //       // do the thing here
+  //     });
+  //
+  //     google.maps.event.addListener(this.circle, 'dragend', () => {
+  //       // console.log("dragend")
+  //       this.clearMarkers()
+  //       this.getIt()
+  //     });
+  //
+  //   })
+  // }
 }
 
-module.exports = {MapStuff: MapStuff}
-
+module.exports = MapStuff
