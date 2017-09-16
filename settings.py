@@ -4,7 +4,7 @@ MONGO_DBNAME="history"
 ALLOW_UNKNOWN=True
 PAGINATION_LIMIT=100
 PAGINATION_DEFAULT=100
-# QUERY_MAX_RESULTS=100
+SCHEMA_ENDPOINT="first"
 
 X_DOMAINS='*'
 
@@ -13,31 +13,27 @@ DOMAIN = {
         'allowed_filters' : ['*'],
         'sorting': True,
         'resource_methods': ['GET', 'POST'],
-
-
     }
 }
 
 first = {
     'datasource': {
+        'source': 'mapped',
         'aggregation': {
             'pipeline': [
-               { '$match':{
-                    'location': {
-                        '$near': {
-                            '$geometry': {
-                                'type': "Point",
-                                'coordinates': ["$lng", "$lat"]
-                            },
-                            '$maxDistance': this.circle.getRadius()
-                        }
-                    }
-                }},
-                {"$group": {
-
-                }}
-
+                {"$match": "$where$"}
             ]
         }
     }
 }
+# first = {
+#     'datasource': {
+#         'aggregation': {
+#             'pipeline': [
+#                 {"$match": "$where$"},
+#                 {"$group": {"datee": "$date"}},
+#                 {"$sort":{ "$created": -1}}
+#             ]
+#         }
+#     }
+# }

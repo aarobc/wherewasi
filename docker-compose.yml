@@ -13,7 +13,7 @@ services:
   nginx:
     image: nginx
     volumes:
-      - ./src:/usr/share/nginx/html
+      - ./dist:/usr/share/nginx/html
     working_dir: /usr/share/nginx/html
     ports:
       - "80:80"
@@ -42,7 +42,10 @@ services:
       - mongo
 
   node:
+    ports:
+      - "8080:8080"
     image: node
     volumes:
-      - ./src:/usr/src/myapp
+      - ./:/usr/src/myapp
     working_dir: /usr/src/myapp
+
