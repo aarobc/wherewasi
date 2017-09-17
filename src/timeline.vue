@@ -1,6 +1,5 @@
 <template>
     <div>
-        bacon
         <div ref="tml" id="tml">
         </div>
     </div>
@@ -10,37 +9,73 @@
 
 import vis from "vis"
 import "vis/dist/vis.css"
+import moment from 'moment'
 
-let items = new vis.DataSet([
-    {id: 1, content: 'item 1', start: '2013-04-20'},
-    {id: 2, content: 'item 2', start: '2013-04-14'},
-    {id: 3, content: 'item 3', start: '2013-04-18'},
-    {id: 4, content: 'item 4', start: '2013-04-16', end: '2013-04-19'},
-    {id: 5, content: 'item 5', start: '2013-04-25'},
-    {id: 6, content: 'item 6', start: '2013-04-27'}
-])
 
 let timeline = {}
 export default {
   // name: 'timeline',
   data () {
     return {
-      timeline: {},
-      values: {},
-      options: {
-          start: new Date('December 17, 1995 03:24:00'),
-          end: new Date()
+        timeline: {},
+        values: {},
+      }
+  },
+  props: {
+      points:{
+          type: Array,
+          required: true
       },
-    }
+      day:{
+          type: Date,
+          required: true
+      }
+  },
+  computed:{
+      options(){
+          return {
+              format: {
+                  minorLabels: {
+                      millisecond:'SSS',
+                      second:     's',
+                      minute:     'h:mm A',
+                      hour:       'h:mm A',
+                  },
+                  majorLabels: {
+                      hour:       'ddd D MMMM',
+                      weekday:    'MMMM YYYY',
+                      day:        'MMMM YYYY',
+                      month:      'YYYY',
+                  }
+              },
+              min: moment(this.day),
+              max: moment(this.day).endOf('day'),
+          }
+      },
+      dsray(){
+
+          return this.points.map(v => {
+
+              return {
+                  x: moment(v.created).local(),
+                  y: v.altitude*3.2808 || 4500,
+                  group: 0,
+                  // label: {content: "herpaderp"}
+              }
+          })
+      },
+      dv(){
+          return new vis.DataSet(this.dsray)
+      }
   },
   mounted(){
+      let dv = new vis.DataSet(this.dsray)
       console.log("mounted")
       // this.values = new vis.Dataset([])
-      // let tml = document.querySelector('#tml')
       setTimeout(() =>{
           console.log("start vis")
           console.log(this.$refs.tml)
-          let b = new vis.Timeline(this.$refs.tml, items, {})
+          let b = new vis.Graph2d(this.$refs.tml, this.dv, this.options)
       }, 900)
   },
 

@@ -38,17 +38,19 @@ export default {
   mounted(){
       this.day = this.value
   },
-  // watch: {
-  //     date (value){
-  //         // this.day = value
-  //         this.$emit('input', value)
-  //     }
-  // },
+  watch: {
+      value (value){
+          this.day = value
+          // this.$emit('input', value)
+      }
+  },
   methods: {
       mvDate(way){
           // this.day.setDate(this.day.getDate() + way)
-          this.day = moment(this.day).add(way, 'days').toDate()
-          this.$emit('input', this.day)
+          // this.day = moment(this.day).add(way, 'days').toDate()
+          // this.$emit('input', this.day)
+          this.$emit('move_search', way)
+
       }
   }
 }

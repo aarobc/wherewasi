@@ -34,16 +34,22 @@
         </div>
         <div class="col-4">
 
-            <date-crap v-model="day"></date-crap>
+            <date-crap v-model="day" v-on:move_search="searchNext($event)" ></date-crap>
 
-            <b-button @click="getOne">Fetch</b-button>
-            {{ circle.lat }}
+
+            <div class="row">
+                <b-button @click="getDay">Fetch</b-button>
+                <spinner v-if="loading"></spinner>
+            </div>
+            <b-table :items="tdata"></b-table>
+
+
 
         </div>
     </div>
     <div class="row">
         <div class="col">
-            <timeline></timeline>
+            <timeline :points="points" :day="day" v-if="!loading"></timeline>
         </div>
     </div>
   </div>
@@ -54,17 +60,20 @@ import dateCrap from "./dateCrap.vue"
 import Datepicker from 'vuejs-datepicker'
 import moment from 'moment'
 import timeline from "./timeline.vue"
+import Spinner from 'vue-simple-spinner'
 
 export default {
   name: 'app',
   components:{
       dateCrap,
       Datepicker,
-      timeline
+      timeline,
+      Spinner
   },
   data () {
     return {
       url:'http://localhost:5000/',
+      loading: false,
       day: new Date(),
       begin: {},
       end: {},
@@ -100,9 +109,6 @@ export default {
           this.circle = nv
           // this.points.push({position: nv})
       },
-      fetchPoints(){
-
-      },
       updateCenter(e){
           this.circle = {
               lat: e.lat(),
@@ -110,10 +116,7 @@ export default {
           }
       },
       getPoints(addr = false){
-          // let url = addr || this.url + "mapped?where=" + this.where()
-          let url = addr || this.url + "mapped?where=" + this.where + "&sort=created"
-          // let url = addr || `${this.url}points/mapped?aggregate={"$where":${this.where()}}`
-          // let url = addr || `${this.url}first?aggregate={"$where":{"altitude":1372}}`
+          let url = addr || this.url + "mapped?where=" + this.where() + "&sort=created"
           return fetch(url)
           .then(resp => {
               return resp.json()
@@ -127,25 +130,129 @@ export default {
           })
       },
       getOne(){
+          this.loading = true
           console.log('getOne')
           this.points = []
           this.getPoints()
           .then(p => {
               this.points.push.apply(this.points, p._items)
               console.log(p)
+              this.loading = false
 
           })
           .catch(e => {
               console.log(e)
+              this.loading = false
           })
       },
-      setPoints(){
+      recurse(addr = false){
+          return this.getPoints(addr)
+          // .then(dat => {
+          //     this.points.push.apply(points, dat._items)
+          //     return dat
+          // })
+          .then(dat => {
+              this.points.push.apply(this.points, dat._items)
+              let href = dat._links.next.href
+              console.log("recurse?")
+              console.log(href)
+              if(this.points.length > this.limit){
+                  console.log("more than 1k records")
+                  return points
+              }
 
+              return this.recurse(this.url + href)
+          })
+          .catch(e => {
+              console.log(e)
+              return this.points
+          })
+
+      },
+      getDay(){
+          this.loading = true
+          console.log('getDay')
+          this.points = []
+          this.recurse()
+          .then(points => {
+              this.loading = false
+              // console.log(points)
+              // return points.map(this.addPoints)
+          })
+          .catch(e => {
+              this.loading = false
+              console.log(e)
+          })
+      },
+      searchNext(way){
+          this.loading = true
+
+          let sort = ""
+          let det = {}
+          let v = moment(this.day).add(way, 'days').startOf('day').toDate().toUTCString()
+          console.log(v)
+
+          if(way > 0){
+              det = {$gt: v}
+              sort = 'created'
+          }
+          else{
+              det = {$lt: v}
+              sort = '-created'
+          }
+
+          let q = {date: null, created: det}
+          let url = this.url + "mapped?where=" + this.where(q) + "&sort=" + sort
+          console.log(url)
+          fetch(url)
+          .then(out => {
+              return out.json()
+          })
+          .then(p => {
+              // console.log(p._items)
+              if(p._items.length){
+                  this.day = moment(p._items[0].created).startOf('day').toDate()
+                  this.loading = false
+                  return
+              }
+              console.log("nope")
+          })
+          .catch(e => {
+              this.loading = false
+          })
+      },
+      where(d){
+
+          // let date = d || this.day.toLocaleDateString('en-US')
+          let when = {
+              $gte: this.day.toUTCString(),
+              $lt: moment(this.day).endOf('day').toDate().toUTCString()
+          }
+          console.log(when)
+
+          let data = {
+              location: {
+                  $near: {
+                      $geometry: {
+                          type: "Point",
+                          coordinates: [this.circle.lng, this.circle.lat]
+                      },
+                      $maxDistance: this.rad
+                  }
+              },
+                created: when
+              // date:  this.day.toLocaleDateString('en-US')
+          }
+
+          let com = Object.assign(data, d)
+          Object.keys(com).forEach((key) => (com[key] == null) && delete com[key])
+          return JSON.stringify(com)
       },
   },
   watch: {
       day(v){
-          this.getOne()
+          // this.getOne()
+          this.getDay()
       }
 
   },
@@ -154,23 +261,13 @@ export default {
           return this.points.sort((p, p2) => p.created > p2.created)
           .map(p => {return p.position})
       },
-      where(){
-          let coords = [this.circle.lng, this.circle.lat]
-          let data = {
-              location: {
-                  $near: {
-                      $geometry: {
-                          type: "Point",
-                          coordinates: coords
-                      },
-                      $maxDistance: this.rad
-                  }
-              },
-              date: this.day.toLocaleDateString('en-US')
-          }
-          return JSON.stringify(data)
-      },
-
+      tdata(){
+          return [
+              {Param: 'Points', value: this.points.length},
+              {Param: 'Start', value: ''},
+              {Param: 'End', value: ''}
+          ]
+      }
   }
 
 }
