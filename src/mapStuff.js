@@ -8,23 +8,23 @@ class MapStuff {
     this.limit = 1001
   }
 
-  where(){
-    let coords = [this.circle.center.lng(), this.circle.center.lat()]
-    let data = {
-      location: {
-        $near: {
-          $geometry: {
-            type: "Point",
-            coordinates: coords
-          },
-          $maxDistance: this.circle.getRadius()
-        }
-      }
-    }
-
-
-    return JSON.stringify(data)
-  }
+  // where(){
+  //   let coords = [this.circle.center.lng(), this.circle.center.lat()]
+  //   let data = {
+  //     location: {
+  //       $near: {
+  //         $geometry: {
+  //           type: "Point",
+  //           coordinates: coords
+  //         },
+  //         $maxDistance: this.circle.getRadius()
+  //       }
+  //     }
+  //   }
+  //
+  //
+  //   return JSON.stringify(data)
+  // }
 
 
   recurse(points = [], addr = false){

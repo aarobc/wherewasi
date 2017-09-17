@@ -11,7 +11,6 @@
                 >
 
 
-
                 <gmap-circle v-if="circle.lng"
                     :radius="rad"
                     :center="circle"
@@ -21,31 +20,21 @@
                     >
                     </gmap-circle>
 
-                    <gmap-marker
-                        :key="index"
-                        v-for="(m, index) in points"
-                        :position="m.position"
-                        :clickable="true"
-                        :draggable="true"
-                        @click="center=m.position"
-                        ></gmap-marker>
+                    <gmap-polyline
+                        v-if="plines.length"
+                        :path="plines"
+                        :editable="false"
+                        :draggable="false"
+                        :geodesic="true"
+                        :options="{geodesic:true, strokeColor:'#FF0000'}"
+                    >
+                    </gmap-polyline>
 
             </gmap-map>
-            <!-- <div ref="map" id="map"></div> -->
         </div>
         <div class="col-4">
 
-            <b-button-toolbar>
-                <b-button-group>
-                    <b-btn>&lsaquo;</b-btn>
-                </b-button-group>
-                <b-input-group>
-                    <datepicker></datepicker>
-                </b-input-group>
-                <b-button-group>
-                    <b-btn>&rsaquo;</b-btn>
-                </b-button-group>
-            </b-button-toolbar>
+            <date-crap v-model="day"></date-crap>
 
             <b-button @click="getOne">Fetch</b-button>
             {{ circle.lat }}
@@ -61,20 +50,22 @@
 </template>
 
 <script>
-import MapStuff from "./mapStuff"
+import dateCrap from "./dateCrap.vue"
 import Datepicker from 'vuejs-datepicker'
+import moment from 'moment'
 import timeline from "./timeline.vue"
 
 export default {
   name: 'app',
   components:{
+      dateCrap,
       Datepicker,
       timeline
   },
   data () {
     return {
       url:'http://localhost:5000/',
-      day: "",
+      day: new Date(),
       begin: {},
       end: {},
       points: [],
@@ -88,21 +79,6 @@ export default {
   },
   created(){
 
-    // gml.load(google => {
-    //
-    //     // this.gApi = google
-    //     let opts = {
-    //         zoom: 9,
-    //         center: {lat: 40.455307, lng: -111.923218
-    //         }
-    //     }
-    //
-    //     // this.gmap = new google.maps.Map(this.$refs.map, opts)
-    //     //
-    //     // this.ms = new MapStuff(this.gmap, this.gApi)
-    //     // this.ms.goog()
-    //     // this.hello()
-    // })
 
   },
   methods: {
@@ -117,12 +93,12 @@ export default {
         console.log(val)
       },
       rightclick(e){
-          // console.log(e)
-          // console.log("rightclick")
-          this.circle.lat = e.latLng.lat()
-          this.circle.lng = e.latLng.lng()
-
-          console.log(this.circle)
+          let nv = {
+              lat: e.latLng.lat(),
+              lng:  e.latLng.lng()
+          }
+          this.circle = nv
+          // this.points.push({position: nv})
       },
       fetchPoints(){
 
@@ -152,6 +128,7 @@ export default {
       },
       getOne(){
           console.log('getOne')
+          this.points = []
           this.getPoints()
           .then(p => {
               this.points.push.apply(this.points, p._items)
@@ -164,10 +141,19 @@ export default {
       },
       setPoints(){
 
+      },
+  },
+  watch: {
+      day(v){
+          this.getOne()
       }
 
   },
   computed: {
+      plines(){
+          return this.points.sort((p, p2) => p.created > p2.created)
+          .map(p => {return p.position})
+      },
       where(){
           let coords = [this.circle.lng, this.circle.lat]
           let data = {
@@ -177,9 +163,10 @@ export default {
                           type: "Point",
                           coordinates: coords
                       },
-                      $maxDistance: this.circle.rad
+                      $maxDistance: this.rad
                   }
-              }
+              },
+              date: this.day.toLocaleDateString('en-US')
           }
           return JSON.stringify(data)
       },
