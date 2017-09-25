@@ -76,14 +76,17 @@ export default {
     let start = moment(this.options.start).add(2, 'hours')
     let end = moment(this.options.end).subtract(5, 'hours')
 
-    // dv = new vis.DataSet([{
-    //     id: 1,
-    //     start: start,
-    //     end: end,
-    //     content: 'Dynamic event'
-    // }])
+    let data = {
+        group: 1,
+        x: start.toDate(),
+        y: 0,
+        end: end.toDate(),
+    }
+    let tot = this.dsray
+    tot.push(data)
 
-  dv = new vis.DataSet(this.dsray)
+    console.log(tot)
+  dv = new vis.DataSet(tot)
 
   // specify options
 
@@ -93,25 +96,37 @@ export default {
   // timeline.setItems(d2)
   // timeline = new vis.Timeline(this.$refs.tml, data, {})
 
-  timeline.addCustomTime(start, 'a')
+  // timeline.addCustomTime(start, 'a')
   // timeline.addCustomTime(end, 'b')
+  timeline.on('contextmenu',  props => {
+      console.log(props)
+      props.event.preventDefault()
+      try{
+          let ct = timeline.getCustomTime('a')
+          console.log(ct)
+      }
+      catch(e){
+          console.log('Right click!')
+          timeline.addCustomTime(start, 'a')
+      }
+  })
 
   // add event listener
-  // timeline.on('timechange',event => {
-  //
-  //
-  //     let item = dv.get(1);
-  //     if(event.id == 'a'){
-  //         item.start = moment(event.time)
-  //
-  //     }
-  //
-  //     if(event.id == 'b'){
-  //         item.end = moment(event.time)
-  //
-  //     }
-  //     dv.update(item)
-  // })
+  timeline.on('timechange',event => {
+
+
+      let item = dv.get(1);
+      console.log(item)
+      if(event.id == 'a'){
+          item.x = moment(event.time)
+
+      }
+
+      // if(event.id == 'b'){
+      //     item.end = moment(event.time)
+      // }
+      dv.update(item)
+  })
 
   // set a custom range from -2 minute to +3 minutes current time
   // timeline.setWindow(this.options.min, this.options.max, {animation: false});
