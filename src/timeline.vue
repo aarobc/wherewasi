@@ -1,3 +1,4 @@
+
 <template>
     <div>
         <div ref="tml" id="tml">
@@ -18,8 +19,13 @@ export default {
   // name: 'timeline',
   data () {
     return {
-        timeline: {},
-        values: {},
+        ct: false,
+        c: "",
+        d:{
+            time: ""
+        }
+        // timeline: {},
+        // values: {},
       }
   },
   props: {
@@ -49,105 +55,106 @@ export default {
                       month:      'YYYY',
                   }
               },
-              min: moment(this.day),
-              max: moment(this.day).endOf('day'),
-              moveable: false,
+              start: moment(this.day).local().startOf('day').toDate(),
+              end: moment(this.day).local().endOf('day').toDate(),
+
+              min: moment(this.day).local().startOf('day').toDate(),
+              max: moment(this.day).local().endOf('day').toDate(),
+              // moveable: false,
+              // showCustomTime: true
+              // showCurrentTime: true
           }
       },
       dsray(){
 
+          // let i = 2
           let d = this.points.map(v => {
               return {
+                  // id: i++,
                   x: moment(v.created).local(),
                   y: v.altitude*3.2808 || 4500,
                   group: 0,
-                  // label: {content: "herpaderp"}
               }
           })
-          // d.push ({
-          //     id: 1,
-          //     start: new Date(this.options.min),
-          //     end: new Date(this.options.max),
-          //     content: 'Dynamic event'
-          // })
           return d
       },
+      closest(){
+
+          return this.c
+      }
   },
   mounted(){
-      dv = new vis.DataSet([
-          {
-          id: 1,
-          start: new Date((new Date()).getTime() - 60 * 1000),
-          end: new Date(),
-          content: 'Dynamic event'
+   // create a data set
+    let start = moment(this.options.start).add(16, 'hours')
+    let end = moment(this.options.start).add(21, 'hours')
+
+    let data = {
+        group: 1,
+        x: start.toDate(),
+        y: 4500,
+        end: end.toDate(),
+        style: "bar"
+    }
+    let tot = this.dsray
+    tot.push(data)
+
+    console.log(tot)
+  dv = new vis.DataSet(tot)
+
+  // specify options
+
+  // create a timeline
+  timeline = new vis.Graph2d(this.$refs.tml, dv, this.options)
+  // timeline = new vis.Timeline(this.$refs.tml, dv, this.options)
+  // timeline.setItems(d2)
+  // timeline = new vis.Timeline(this.$refs.tml, data, {})
+
+  timeline.addCustomTime(start, 'a')
+  timeline.addCustomTime(end, 'b')
+
+  timeline.on('contextmenu',  props => {
+      console.log("event:")
+      console.log(props)
+      props.event.preventDefault()
+      if(this.ct){
+          let ct = timeline.setCustomTime(props.time, 'c')
+          console.log("custom time: ")
+          console.log(ct)
+
       }
-      ])
-
-      var options = {
-          showCurrentTime: true
+      else{
+          timeline.addCustomTime(props.time, 'c')
+          this.ct = true
       }
-      dv = new vis.DataSet(this.dsray)
-      console.log("mounted")
-      // this.values = new vis.Dataset([])
-      console.log("start vis")
-      console.log(this.$refs.tml)
+      console.log("bacon")
+  })
 
-      // let g = new vis.Graph2d(this.$refs.tml, dv, this.options)
-      let g = new vis.Graph2d(this.$refs.tml, dv, options)
+  // add event listener
+  timeline.on('timechange', this.timeChange)
 
-      g.addCustomTime(new Date())
-      g.addCustomTime(moment().endOf('day').toDate())
-      // g.addCustomTime(new Date(this.config.min))
-      // g.on('click', e => {
-      //     console.log(e)
-      // })
-      //
-      // g.on('ondrag', e => {
-      //     console.log(e)
-      // })
-      //
-      // g.on('timechange', e => {
-      //     console.log(e)
-      // })
+  // set a custom range from -2 minute to +3 minutes current time
+  // timeline.setWindow(this.options.min, this.options.max, {animation: false});
+  },
+  methods:{
+      timeChange(event){
 
-      // set a custom range from -2 minute to +3 minutes current time
-      var start = new Date((new Date()).getTime() - 2 * 60 * 1000);
-      var end   = new Date((new Date()).getTime() + 3 * 60 * 1000);
-      timeline.setWindow(start, end, {animation: false});
-
-
-      // add event listener
-      g.on('timechange', function (event) {
-
-          // var item = dv.get(1);
-          console.log(dv)
-          console.log(event)
-          // if (event.time > item.start) {
-          //     item.end = new Date(event.time);
-          //     var now = new Date();
-          //     if (event.time < now) {
-          //         item.content = "Dynamic event (past)";
-          //         item.className = 'past';
-          //     }
-          //     else if (event.time > now) {
-          //         item.content = "Dynamic event (future)";
-          //         item.className = 'future';
-          //     }
-          //     else  {
-          //         item.content = "Dynamic event (now)";
-          //         item.className = 'now';
-          //     }
-
-              // dv.update(item)
+          // let item = dv.get(1);
+          // if(event.id == 'a'){
+          //     item.x = moment(event.time)
+          //
           // }
-      })
+          if(event.id == 'c'){
+              this.c = moment(event.time).toISOString()
+          }
+
+      }
+  },
+  watch: {
+      c: function(val, old){
+          console.log(val)
+      }
   }
 
-  // computed: {
-  //     values: () =>{
-  //         return {}
-  //     }
-  // }
 
 }
 </script>
@@ -161,5 +168,13 @@ export default {
     .vis.timeline .item.past {
         filter: alpha(opacity=50);
         opacity: 0.5;
+    }
+
+    .b{
+        background-color:red;
+    }
+
+    .c{
+        background-color:green;
     }
 </style>

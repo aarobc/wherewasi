@@ -49,8 +49,7 @@
     </div>
     <div class="row">
         <div class="col">
-            <!-- <timeline :points="points" :day="day" v&#45;if="!loading &#38;&#38; points.length"></timeline> -->
-            <test :points="points" :day="day" v-if="!loading && points.length"></test>
+            <timeline :points="points" :day="day" v-if="!loading && points.length"></timeline>
         </div>
     </div>
   </div>
@@ -62,7 +61,6 @@ import Datepicker from 'vuejs-datepicker'
 import moment from 'moment'
 import timeline from "./timeline.vue"
 import Spinner from 'vue-simple-spinner'
-import test from './test.vue'
 
 export default {
   name: 'app',
@@ -71,7 +69,6 @@ export default {
       Datepicker,
       timeline,
       Spinner,
-      test
   },
   data () {
     return {
