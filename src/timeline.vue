@@ -36,7 +36,15 @@ export default {
       day:{
           type: Date,
           required: true
-      }
+      },
+      marker:{
+          type: Object,
+          required: false
+      },
+      range:{
+          type: Object,
+          required: false
+      },
   },
   computed:{
       options(){
@@ -68,20 +76,37 @@ export default {
       dsray(){
 
           // let i = 2
-          let d = this.points.map(v => {
+          return this.points.map(v => {
               return {
                   // id: i++,
                   x: moment(v.created).local(),
                   y: v.altitude*3.2808 || 4500,
                   group: 0,
+                  position: v.position,
               }
           })
-          return d
       },
       closest(){
 
-          return this.c
-      }
+          if(!this.c){
+            return null
+          }
+          // let copy = JSON.parse(JSON.stringify(this.dsray))
+
+          let x = this.c.unix()
+          // console.log(x)
+          // return null
+          // return copy.sort( (a, b) => {
+          let v = this.points.sort( (a, b) => {
+              let ay = moment(a.created).diff(this.c)
+              let be = moment(b.created).diff(this.c)
+              console.log(ay)
+              return 0
+              // return (Math.abs(x - ay)) - (Math.abs(x - be))
+          });
+
+          return null
+      },
   },
   mounted(){
    // create a data set
@@ -113,13 +138,14 @@ export default {
   timeline.addCustomTime(end, 'b')
 
   timeline.on('contextmenu',  props => {
-      console.log("event:")
-      console.log(props)
+      // console.log("event:")
+      // console.log(props)
+
       props.event.preventDefault()
       if(this.ct){
           let ct = timeline.setCustomTime(props.time, 'c')
-          console.log("custom time: ")
-          console.log(ct)
+          // console.log("custom time: ")
+          // console.log(ct)
 
       }
       else{
@@ -136,22 +162,34 @@ export default {
   // timeline.setWindow(this.options.min, this.options.max, {animation: false});
   },
   methods:{
+      copy(val){
+        return JSON.parse(JSON.stringify(val))
+      },
       timeChange(event){
 
-          // let item = dv.get(1);
-          // if(event.id == 'a'){
-          //     item.x = moment(event.time)
-          //
-          // }
+          let n = this.copy(this.range)
+          let o = moment(event.time)
+          if(event.id == 'a'){
+              n.start = o
+              this.$emit('update:range', n)
+
+          }
+
+          if(event.id == 'b'){
+              n.end = o
+              this.$emit('update:range', n)
+
+          }
+
           if(event.id == 'c'){
-              this.c = moment(event.time).toISOString()
+              this.c = o
           }
 
       }
   },
   watch: {
       c: function(val, old){
-          console.log(val)
+          this.$emit('update:marker', this.closest)
       }
   }
 

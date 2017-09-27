@@ -10,6 +10,11 @@
                 id="map"
                 >
 
+                <gmap-marker v-if="hasMarker"
+                    :position="marker.position"
+                    >
+                </gmap-marker>
+
 
                 <gmap-circle v-if="circle.lng"
                     :radius="rad"
@@ -49,7 +54,7 @@
     </div>
     <div class="row">
         <div class="col">
-            <timeline :points="points" :day="day" v-if="!loading && points.length"></timeline>
+            <timeline :range.sync="range" :marker.sync="marker" :points="points" :day="day" v-if="!loading && points.length"></timeline>
         </div>
     </div>
   </div>
@@ -61,6 +66,7 @@ import Datepicker from 'vuejs-datepicker'
 import moment from 'moment'
 import timeline from "./timeline.vue"
 import Spinner from 'vue-simple-spinner'
+import _ from 'lodash'
 
 export default {
   name: 'app',
@@ -74,12 +80,16 @@ export default {
     return {
       url:'http://localhost:5000/',
       loading: false,
+      marker: {},
       day: new Date(),
-      begin: {},
-      end: {},
+      range:{
+          begin: {},
+          end: {},
+      },
       points: [],
       limit: 1000,
       rad: 400,
+      report: [],
       circle: {
           lat: 0,
           lng: 0,
@@ -257,6 +267,9 @@ export default {
 
   },
   computed: {
+      hasMarker(){
+          return _.has(this.marker, 'position')
+      },
       plines(){
           return this.points.sort((p, p2) => p.created > p2.created)
           .map(p => {return p.position})
@@ -264,8 +277,8 @@ export default {
       tdata(){
           return [
               {Param: 'Points', value: this.points.length},
-              {Param: 'Start', value: ''},
-              {Param: 'End', value: ''}
+              {Param: 'Start', value: moment(this.range.start).format("h:mm a")},
+              {Param: 'End', value: moment(this.range.end).format("h:mm a")}
           ]
       }
   }
