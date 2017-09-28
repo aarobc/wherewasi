@@ -19,11 +19,14 @@ export default {
   // name: 'timeline',
   data () {
     return {
+      localCopy: [],
         ct: false,
         c: "",
         d:{
             time: ""
-        }
+        },
+        closest: null,
+
         // timeline: {},
         // values: {},
       }
@@ -86,32 +89,15 @@ export default {
               }
           })
       },
-      closest(){
-
-          if(!this.c){
-            return null
-          }
-          // let copy = JSON.parse(JSON.stringify(this.dsray))
-
-          let x = this.c.unix()
-          // console.log(x)
-          // return null
-          // return copy.sort( (a, b) => {
-          let v = this.points.sort( (a, b) => {
-              let ay = moment(a.created).diff(this.c)
-              let be = moment(b.created).diff(this.c)
-              console.log(ay)
-              return 0
-              // return (Math.abs(x - ay)) - (Math.abs(x - be))
-          });
-
-          return null
-      },
+  },
+  created(){
+    this.localCopy = JSON.parse(JSON.stringify(this.points))
   },
   mounted(){
    // create a data set
     let start = moment(this.options.start).add(16, 'hours')
     let end = moment(this.options.start).add(21, 'hours')
+    this.localCopy = JSON.parse(JSON.stringify(this.points))
 
     let data = {
         group: 1,
@@ -123,8 +109,7 @@ export default {
     let tot = this.dsray
     tot.push(data)
 
-    console.log(tot)
-  dv = new vis.DataSet(tot)
+    dv = new vis.DataSet(tot)
 
   // specify options
 
@@ -162,6 +147,31 @@ export default {
   // timeline.setWindow(this.options.min, this.options.max, {animation: false});
   },
   methods:{
+      findClosest(){
+
+          if(!this.c){
+            return null
+          }
+          // let copy = JSON.parse(JSON.stringify(this.dsray))
+
+          // console.log(x)
+          // return null
+          // return copy.sort( (a, b) => {
+          this.localCopy.sort( (a, b) => {
+              let ay = moment(a.created).diff(this.c)
+              let be = moment(b.created).diff(this.c)
+              // console.log("hey")
+              // console.log(ay)
+              // return false
+              return Math.abs(ay) - (Math.abs(be))
+              // return (Math.abs(x - ay)) - (Math.abs(x - be))
+          })
+
+        return this.points[0]
+          // return v
+          // return v[0]
+          // return null
+      },
       copy(val){
         return JSON.parse(JSON.stringify(val))
       },
@@ -183,15 +193,18 @@ export default {
 
           if(event.id == 'c'){
               this.c = o
+              this.$emit('update:marker', this.findClosest())
           }
 
       }
   },
-  watch: {
-      c: function(val, old){
-          this.$emit('update:marker', this.closest)
-      }
-  }
+  // watch: {
+  //     c: function(val, old){
+  //         console.log("watch")
+  //         console.log(this.closest)
+  //         this.$emit('update:marker', this.findClosest())
+  //     }
+  // }
 
 
 }
