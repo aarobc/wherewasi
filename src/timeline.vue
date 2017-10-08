@@ -19,13 +19,15 @@ export default {
   // name: 'timeline',
   data () {
     return {
-      localCopy: [],
+      // localCopy: [],
         ct: false,
         c: "",
         d:{
             time: ""
         },
-        closest: null,
+        closest: {
+        },
+        dsray:[],
 
         // timeline: {},
         // values: {},
@@ -76,40 +78,29 @@ export default {
               // showCurrentTime: true
           }
       },
-      dsray(){
-
-          // let i = 2
-          return this.points.map(v => {
-              return {
-                  // id: i++,
-                  x: moment(v.created).local(),
-                  y: v.altitude*3.2808 || 4500,
-                  group: 0,
-                  position: v.position,
-              }
-          })
-      },
   },
   created(){
-    this.localCopy = JSON.parse(JSON.stringify(this.points))
+      // console.log(this.points)
+    this.dsray = this.toDsray(this.points)
+    console.log(this.dsray)
   },
   mounted(){
    // create a data set
     let start = moment(this.options.start).add(16, 'hours')
     let end = moment(this.options.start).add(21, 'hours')
-    this.localCopy = JSON.parse(JSON.stringify(this.points))
+    // this.localCopy = JSON.parse(JSON.stringify(this.points))
 
-    let data = {
-        group: 1,
-        x: start.toDate(),
-        y: 4500,
-        end: end.toDate(),
-        style: "bar"
-    }
-    let tot = this.dsray
-    tot.push(data)
+    // let data = {
+    //     group: 1,
+    //     x: start.toDate(),
+    //     y: 4500,
+    //     end: end.toDate(),
+    //     style: "bar"
+    // }
+    // this.dsray = this.toDsray()
+    // tot.push(data)
 
-    dv = new vis.DataSet(tot)
+    dv = new vis.DataSet(this.dsray)
 
   // specify options
 
@@ -122,22 +113,22 @@ export default {
   timeline.addCustomTime(start, 'a')
   timeline.addCustomTime(end, 'b')
 
-  timeline.on('contextmenu',  props => {
-      // console.log("event:")
-      // console.log(props)
+  timeline.on('contextmenu',  p => {
 
-      props.event.preventDefault()
+      p.event.preventDefault()
       if(this.ct){
-          let ct = timeline.setCustomTime(props.time, 'c')
+          let ct = timeline.setCustomTime(p.time, 'c')
           // console.log("custom time: ")
           // console.log(ct)
 
       }
       else{
-          timeline.addCustomTime(props.time, 'c')
+          timeline.addCustomTime(p.time, 'c')
           this.ct = true
       }
-      console.log("bacon")
+      this.c = p.time
+      this.findClosest()
+      this.$emit('update:marker', this.findClosest())
   })
 
   // add event listener
@@ -147,30 +138,46 @@ export default {
   // timeline.setWindow(this.options.min, this.options.max, {animation: false});
   },
   methods:{
+      toDsray(points){
+          // annoy workaround because of weird issue with moment and vue getter
+          let p = this.copy(points)
+          return p.map(v => {
+              return {
+                  x: moment(v.created).local().toDate(),
+                  y: v.altitude * 3.2808 || 4500,
+                  group: 0,
+                  position: v.position,
+              }
+          })
+      },
       findClosest(){
 
           if(!this.c){
             return null
           }
-          // let copy = JSON.parse(JSON.stringify(this.dsray))
 
-          // console.log(x)
-          // return null
-          // return copy.sort( (a, b) => {
-          this.localCopy.sort( (a, b) => {
-              let ay = moment(a.created).diff(this.c)
-              let be = moment(b.created).diff(this.c)
-              // console.log("hey")
-              // console.log(ay)
-              // return false
-              return Math.abs(ay) - (Math.abs(be))
-              // return (Math.abs(x - ay)) - (Math.abs(x - be))
-          })
 
-        return this.points[0]
-          // return v
-          // return v[0]
-          // return null
+          let prev
+
+          for(let index in this.dsray) {
+
+              let val = this.dsray[index]
+
+              let value = Math.abs(moment(val.x).diff(this.c))
+
+              if(prev === undefined){
+                  prev = value
+                  continue
+              }
+
+              if(prev < value){
+                  this.closest = this.dsray[index -1]
+                  return this.points[index -1]
+              }
+              prev = value
+
+          }
+          return null
       },
       copy(val){
         return JSON.parse(JSON.stringify(val))
@@ -178,7 +185,8 @@ export default {
       timeChange(event){
 
           let n = this.copy(this.range)
-          let o = moment(event.time)
+          // let o = moment(event.time).toDate()
+          let o = event.time
           if(event.id == 'a'){
               n.start = o
               this.$emit('update:range', n)
@@ -192,21 +200,22 @@ export default {
           }
 
           if(event.id == 'c'){
+              // console.log(o)
               this.c = o
+              this.findClosest()
               this.$emit('update:marker', this.findClosest())
           }
 
       }
   },
-  // watch: {
-  //     c: function(val, old){
-  //         console.log("watch")
-  //         console.log(this.closest)
-  //         this.$emit('update:marker', this.findClosest())
-  //     }
-  // }
-
-
+  watch: {
+      position: function(v){
+        // console.log(v)
+      },
+      c: function(v){
+        // console.log(v)
+      }
+  }
 }
 </script>
 

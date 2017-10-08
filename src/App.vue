@@ -43,7 +43,7 @@
 
 
             <div class="row">
-                <b-button @click="getDay">Fetch</b-button>
+                <b-button @click="air">Fetch</b-button>
                 <spinner v-if="loading"></spinner>
             </div>
             <b-table :items="tdata"></b-table>
@@ -78,13 +78,14 @@ export default {
   },
   data () {
     return {
+      allInRange: false,
       url:'http://localhost:5000/',
       loading: false,
       marker: {},
       day: new Date(),
       range:{
-          begin: {},
-          end: {},
+          start: moment().startOf('day').add(16, 'hours').toDate(),
+          end: moment().startOf('day').add(21, 'hours').toDate(),
       },
       points: [],
       limit: 1000,
@@ -98,11 +99,21 @@ export default {
   },
   created(){
 
-
   },
   methods: {
-      fetch(){
-        console.log('fetch...')
+      air(){
+        this.allInRange = true
+        this.points = []
+        this.getDay()
+        this.allInRange = false
+      },
+
+      reporter(d){
+
+          let r = {
+              date:d.date,
+              time:d.date,
+          }
       },
       hello(){
           console.log("hello")
@@ -234,11 +245,10 @@ export default {
       where(d){
 
           // let date = d || this.day.toLocaleDateString('en-US')
-          let when = {
+          let created = {
               $gte: this.day.toUTCString(),
               $lt: moment(this.day).endOf('day').toDate().toUTCString()
           }
-          console.log(when)
 
           let data = {
               location: {
@@ -250,12 +260,21 @@ export default {
                       $maxDistance: this.rad
                   }
               },
-                created: when
+                created: created
               // date:  this.day.toLocaleDateString('en-US')
+          }
+
+          if(this.allInRange){
+              delete data.location
+              data.created = {
+                  $gte: moment(this.range.start).local().toDate().toUTCString(),
+                  $lt: moment(this.range.end).local().toDate().toUTCString()
+              }
           }
 
           let com = Object.assign(data, d)
           Object.keys(com).forEach((key) => (com[key] == null) && delete com[key])
+          console.log(com)
           return JSON.stringify(com)
       },
   },
