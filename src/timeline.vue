@@ -82,7 +82,7 @@ export default {
   created(){
       // console.log(this.points)
     this.dsray = this.toDsray(this.points)
-    console.log(this.dsray)
+    // console.log(this.dsray)
   },
   mounted(){
    // create a data set

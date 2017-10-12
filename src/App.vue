@@ -115,9 +115,6 @@ export default {
               time:d.date,
           }
       },
-      hello(){
-          console.log("hello")
-      },
       log(val){
         console.log("log")
         console.log(val)
@@ -157,12 +154,12 @@ export default {
           this.getPoints()
           .then(p => {
               this.points.push.apply(this.points, p._items)
-              console.log(p)
+              // console.log(p)
               this.loading = false
 
           })
           .catch(e => {
-              console.log(e)
+              // console.log(e)
               this.loading = false
           })
       },
@@ -175,8 +172,8 @@ export default {
           .then(dat => {
               this.points.push.apply(this.points, dat._items)
               let href = dat._links.next.href
-              console.log("recurse?")
-              console.log(href)
+              // console.log("recurse?")
+              // console.log(href)
               if(this.points.length > this.limit){
                   console.log("more than 1k records")
                   return points
@@ -185,14 +182,14 @@ export default {
               return this.recurse(this.url + href)
           })
           .catch(e => {
-              console.log(e)
+              // console.log(e)
               return this.points
           })
 
       },
       getDay(){
           this.loading = true
-          console.log('getDay')
+          // console.log('getDay')
           this.points = []
           this.recurse()
           .then(points => {
@@ -202,7 +199,7 @@ export default {
           })
           .catch(e => {
               this.loading = false
-              console.log(e)
+              // console.log(e)
           })
       },
       searchNext(way){
@@ -211,7 +208,7 @@ export default {
           let sort = ""
           let det = {}
           let v = moment(this.day).add(way, 'days').startOf('day').toDate().toUTCString()
-          console.log(v)
+          // console.log(v)
 
           if(way > 0){
               det = {$gt: v}
@@ -224,7 +221,7 @@ export default {
 
           let q = {date: null, created: det}
           let url = this.url + "mapped?where=" + this.where(q) + "&sort=" + sort
-          console.log(url)
+          // console.log(url)
           fetch(url)
           .then(out => {
               return out.json()
@@ -236,7 +233,7 @@ export default {
                   this.loading = false
                   return
               }
-              console.log("nope")
+              // console.log("nope")
           })
           .catch(e => {
               this.loading = false
@@ -274,12 +271,25 @@ export default {
 
           let com = Object.assign(data, d)
           Object.keys(com).forEach((key) => (com[key] == null) && delete com[key])
-          console.log(com)
+          // console.log(com)
           return JSON.stringify(com)
       },
   },
   watch: {
       day(v){
+          let d = moment(v).local().startOf('day')
+          console.log(d)
+          let start = moment(this.range.start).startOf('day').diff(this.range.start)
+          let end = moment(this.range.end).startOf('day').diff(this.range.end)
+          // TODO: complain about moment durations in this situation
+          let sd = moment.duration(Math.abs(start))
+          let ed = moment.duration(Math.abs(end))
+          console.log(sd.humanize(), ed.humanize())
+
+          console.log(sd)
+
+          this.range.start = d.clone().add(sd).local().toDate()
+          this.range.end = d.clone().add(ed).local().toDate()
           // this.getOne()
           this.getDay()
       }
@@ -296,9 +306,19 @@ export default {
       tdata(){
           return [
               {Param: 'Points', value: this.points.length},
+              {Param: 'Day', value: moment(this.day).format('dddd')},
               {Param: 'Start', value: moment(this.range.start).format("h:mm a")},
-              {Param: 'End', value: moment(this.range.end).format("h:mm a")}
+              {Param: 'End', value: moment(this.range.end).format("h:mm a")},
+              {Param: 'Max Altitude', value: this.maxAlt},
           ]
+      },
+      maxAlt(){
+          // let s = this.points.concat().
+          let m = _.maxBy(this.points, o => o.altitude)
+          if(m){
+              return Math.round(m.altitude * 3.2808)
+          }
+          return undefined
       }
   }
 
