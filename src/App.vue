@@ -193,6 +193,14 @@ export default {
           this.points = []
           this.recurse()
           .then(points => {
+              this.points = this.points.map(item => {
+                  item.created = moment(item.created).local()
+                  item.unix = moment(item.created).local().unix()
+                    return item
+              })
+              this.points.sort((a, b) => a.unix < b.unix)
+
+              // this.points.sort((a, b) => moment(a).isBefore(b))
               this.loading = false
               // console.log(points)
               // return points.map(this.addPoints)

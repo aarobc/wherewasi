@@ -21,13 +21,14 @@ export default {
     return {
       // localCopy: [],
         ct: false,
-        c: "",
+        c: 0,
         d:{
             time: ""
         },
         closest: {
         },
         dsray:[],
+        time: "",
 
         // timeline: {},
         // values: {},
@@ -126,9 +127,8 @@ export default {
           timeline.addCustomTime(p.time, 'c')
           this.ct = true
       }
-      this.c = p.time
-      this.findClosest()
-      this.$emit('update:marker', this.findClosest())
+      this.c = moment(p.time).unix()
+      this.$emit('update:marker', this.findClosest(p.time))
   })
 
   // add event listener
@@ -150,38 +150,53 @@ export default {
               }
           })
       },
-      findClosest(){
+      findClosest(v){
 
-          if(!this.c){
-            return null
-          }
+          let ux = moment(v).unix()
+          let dex = _.sortedIndexBy(this.points, {unix: ux}, 'unix')
 
+                                    // console.log(dex)
+                                    // console.log(moment(v).unix())
+        if(Math.abs(this.points[dex].unix - ux) > Math.abs(this.points[dex + 1].unix - ux)){
+            console.log(dex)
+            dex++
+            console.log(dex)
+            console.log("eeee")
+        }
+        this.closest = dex
+        // this.closest = this.points[dex].position
+        return this.points[dex]
 
-          let prev
-
-          for(let index in this.dsray) {
-
-              let val = this.dsray[index]
-
-              let value = Math.abs(moment(val.x).diff(this.c))
-
-              if(prev === undefined){
-                  prev = value
-                  continue
-              }
-
-              if(prev < value){
-                  this.closest = this.dsray[index -1]
-                  return this.points[index -1]
-              }
-              prev = value
-
-          }
-          return null
+          // let prev
+          //
+          // for(let index in this.points) {
+          //
+          //     let val = this.points[index]
+          //
+          //     let value = Math.abs(moment(val.created).diff(v))
+          //
+          //     if(prev === undefined){
+          //         prev = value
+          //         continue
+          //     }
+          //
+          //     if(prev < value){
+          //         this.closest = this.dsray[index -1].position
+          //         return this.points[index -1]
+          //     }
+          //     prev = value
+          //
+          // }
+          // return null
       },
       copy(val){
         return JSON.parse(JSON.stringify(val))
       },
+      fc: _.throttle(function(o){
+
+                  this.c = moment(o).unix()
+                  this.$emit('update:marker', this.findClosest(o))
+      }, 300),
       timeChange(event){
 
           let n = this.copy(this.range)
@@ -200,17 +215,14 @@ export default {
           }
 
           if(event.id == 'c'){
-              // console.log(o)
-              this.c = o
-              this.findClosest()
-              this.$emit('update:marker', this.findClosest())
+              this.fc(o)
           }
 
       }
   },
   watch: {
-      position: function(v){
-        // console.log(v)
+      closest: function(v){
+        console.log(v)
       },
       c: function(v){
         // console.log(v)
