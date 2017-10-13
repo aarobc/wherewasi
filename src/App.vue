@@ -198,7 +198,10 @@ export default {
                   item.unix = moment(item.created).local().unix()
                     return item
               })
-              this.points.sort((a, b) => a.unix < b.unix)
+              // this.points.sort((a, b) => {
+              //     return a.unix < b.unix
+              // })
+              this.points = _.sortBy(this.points, ['unix'])
 
               // this.points.sort((a, b) => moment(a).isBefore(b))
               this.loading = false
@@ -308,8 +311,7 @@ export default {
           return _.has(this.marker, 'position')
       },
       plines(){
-          return this.points.sort((p, p2) => p.created > p2.created)
-          .map(p => {return p.position})
+          return this.points.map(p => p.position)
       },
       tdata(){
           return [

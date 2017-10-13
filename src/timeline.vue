@@ -11,6 +11,7 @@
 import vis from "vis"
 import "vis/dist/vis.css"
 import moment from 'moment'
+import _ from 'lodash'
 
 let dv = {}
 
@@ -153,41 +154,32 @@ export default {
       findClosest(v){
 
           let ux = moment(v).unix()
-          let dex = _.sortedIndexBy(this.points, {unix: ux}, 'unix')
+          let nb = _.sortBy(this.points, ['unix'])
+          // console.log(nb)
+          // let dex = _.sortedIndexBy(nb, {unix: ux}, 'unix')
+          // this.points.sort((a, b) => {
+          //     return a.unix < b.unix
+          // })
+          // it's 2 in the moring
+          let dex = _.sortedIndexBy(nb, {unix: ux}, 'unix')
+          dex--
+          dex = (dex == -1)? 0: dex
 
-                                    // console.log(dex)
-                                    // console.log(moment(v).unix())
-        if(Math.abs(this.points[dex].unix - ux) > Math.abs(this.points[dex + 1].unix - ux)){
-            console.log(dex)
-            dex++
-            console.log(dex)
-            console.log("eeee")
-        }
-        this.closest = dex
-        // this.closest = this.points[dex].position
-        return this.points[dex]
+          if(this.points.length <= dex){
+              console.log('early', this.points.length, dex)
+              return this.points[dex]
+          }
 
-          // let prev
-          //
-          // for(let index in this.points) {
-          //
-          //     let val = this.points[index]
-          //
-          //     let value = Math.abs(moment(val.created).diff(v))
-          //
-          //     if(prev === undefined){
-          //         prev = value
-          //         continue
-          //     }
-          //
-          //     if(prev < value){
-          //         this.closest = this.dsray[index -1].position
-          //         return this.points[index -1]
-          //     }
-          //     prev = value
-          //
-          // }
-          // return null
+          let da = ux - this.points[dex].unix
+          let ta = this.points[dex + 1].unix - ux
+          console.log(da, ta)
+          if(da > ta){
+              // console.log(da, ta)
+              dex++
+          }
+          this.closest = dex
+          return this.points[dex]
+
       },
       copy(val){
         return JSON.parse(JSON.stringify(val))
