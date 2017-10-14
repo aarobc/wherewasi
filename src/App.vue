@@ -44,6 +44,7 @@
 
             <div class="row">
                 <b-button @click="air">Fetch</b-button>
+                <b-button @click="addDay">Add</b-button>
                 <spinner v-if="loading"></spinner>
             </div>
             <b-table :items="tdata"></b-table>
@@ -55,6 +56,11 @@
     <div class="row">
         <div class="col">
             <timeline :range.sync="range" :marker.sync="marker" :points="points" :day="day" v-if="!loading && points.length"></timeline>
+        </div>
+    </div>
+    <div class="row">
+        <div class="timeline">
+            <b-table :items="resTable"></b-table>
         </div>
     </div>
   </div>
@@ -101,6 +107,9 @@ export default {
 
   },
   methods: {
+      addDay(){
+        this.report.push(this.fd)
+      },
       air(){
         this.allInRange = true
         this.points = []
@@ -313,14 +322,43 @@ export default {
       plines(){
           return this.points.map(p => p.position)
       },
+      duration(){
+          return moment.duration(moment(this.range.start).diff(this.range.end))
+      },
+      fd(){
+          return {
+              day: this.day,
+              start: moment(this.range.start).format("h:mm a"),
+              end: moment(this.range.end).format("h:mm a"),
+              maxAlt: this.maxAlt,
+              duration: moment.duration(moment(this.range.start).diff(this.range.end)),
+          }
+      },
       tdata(){
-          return [
+          let res = [
               {Param: 'Points', value: this.points.length},
               {Param: 'Day', value: moment(this.day).format('dddd')},
-              {Param: 'Start', value: moment(this.range.start).format("h:mm a")},
-              {Param: 'End', value: moment(this.range.end).format("h:mm a")},
-              {Param: 'Max Altitude', value: this.maxAlt},
+              {Param: 'Start', value: this.fd.start},
+              {Param: 'End', value: this.fd.end},
+              // {Param: 'Max Altitude', value: this.maxAlt},
+              {Param: 'Duration', value: this.fd.duration.humanize()},
           ]
+          if(this.maxAlt){
+              res.push({Param: 'Max Altitude', value: this.maxAlt})
+          }
+          return res
+      },
+      resTable(){
+          return this.report.map(item => {
+              return{
+                  Day: moment(item.day).format('d MMM YYYY'),
+                  Start: item.start,
+                  End: item.end,
+                  Duration: moment.duration(item.duration).humanize(),
+                  MaxAlt: item.maxAlt,
+              }
+          })
+          return []
       },
       maxAlt(){
           // let s = this.points.concat().
