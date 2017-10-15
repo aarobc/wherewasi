@@ -62,13 +62,7 @@
         </div>
     </div>
     <div class="row">
-        <div class="timeline">
-            <b-table :items="resTable" :fields="resTableFields">
-                <template slot="delete" scope="data">
-                    <b-button @click="rm(data)">X</b-button>
-                </template>
-            </b-table>
-        </div>
+        <days ref="days"></days>
     </div>
   </div>
 </template>
@@ -82,6 +76,7 @@ import timeline from "./timeline.vue"
 import Spinner from 'vue-simple-spinner'
 import _ from 'lodash'
 import axios from 'axios'
+import days from './days.vue'
 
 export default {
   name: 'app',
@@ -90,6 +85,7 @@ export default {
       Datepicker,
       timeline,
       Spinner,
+      days,
   },
   data () {
     return {
@@ -106,7 +102,6 @@ export default {
       points: [],
       limit: 1000,
       rad: 400,
-      report: [],
       circle: {
           lat: 0,
           lng: 0,
@@ -117,9 +112,6 @@ export default {
 
   },
   methods: {
-      rm(row){
-        this.report.splice(row.index, 1)
-      },
       makeCsv(){
           let keys = Object.keys(this.resTable[0])
           let h = keys.join(',')
@@ -139,9 +131,8 @@ export default {
           console.log(this.fd)
           axios.post(this.url + 'days', this.fd)
           .then(out => {
-              console.log(out)
+              this.$refs.days.getData()
           })
-        this.report.push(this.fd)
       },
       air(){
         this.allInRange = true
@@ -150,13 +141,6 @@ export default {
         this.allInRange = false
       },
 
-      reporter(d){
-
-          let r = {
-              date:d.date,
-              time:d.date,
-          }
-      },
       log(val){
         console.log("log")
         console.log(val)
@@ -356,10 +340,19 @@ export default {
       duration(){
           return moment.duration(moment(this.range.start).diff(this.range.end))
       },
-      total(){
-          return this.report.reduce((carry, item) => {
-              return carry.add(item.duration)
-          }, moment.duration())
+      tdata(){
+          let res = [
+              {Param: 'Points', value: this.points.length},
+              {Param: 'Day', value: moment(this.day).format('dddd')},
+              {Param: 'Start', value: this.fd.start},
+              {Param: 'End', value: this.fd.end},
+              {Param: 'Duration', value: this.fd.duration.format('h [hrs], m [min]')},
+              // {Param: 'Total', value: moment.duration(this.total).format('h [hrs], m [min]')},
+          ]
+          if(this.maxAlt){
+              res.push({Param: 'Max Altitude', value: this.maxAlt})
+          }
+          return res
       },
       fd(){
           return {
@@ -368,46 +361,8 @@ export default {
               end: moment(this.range.end).format("h:mm a"),
               maxAlt: this.maxAlt,
               duration: moment.duration(moment(this.range.end).diff(this.range.start)),
-              total: this.total.format("h:mm a"),
+              // total: this.total.format("h:mm a"),
           }
-      },
-      tdata(){
-          let res = [
-              {Param: 'Points', value: this.points.length},
-              {Param: 'Day', value: moment(this.day).format('dddd')},
-              {Param: 'Start', value: this.fd.start},
-              {Param: 'End', value: this.fd.end},
-              // {Param: 'Max Altitude', value: this.maxAlt},
-              {Param: 'Duration', value: this.fd.duration.format('h [hrs], m [min]')},
-              {Param: 'Total', value: moment.duration(this.total).format('h [hrs], m [min]')},
-          ]
-          if(this.maxAlt){
-              res.push({Param: 'Max Altitude', value: this.maxAlt})
-          }
-          return res
-      },
-      resTable(){
-          return this.report.map(item => {
-              return{
-                  Day: moment(item.day).format('d MMM YYYY'),
-                  Start: item.start,
-                  End: item.end,
-                  Duration: moment.duration(item.duration).format('h [hrs], m [min]'),
-                  MaxAlt: item.maxAlt,
-              }
-          })
-          return []
-      },
-      resTableFields(){
-          let fields = []
-          try{
-              fields = Object.keys(this.resTable[0])
-              fields.push('delete')
-          }
-          catch(e) {
-              return []
-          }
-              return fields
       },
       maxAlt(){
           // let s = this.points.concat().

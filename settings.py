@@ -7,6 +7,8 @@ PAGINATION_DEFAULT=100
 SCHEMA_ENDPOINT="first"
 
 X_DOMAINS='*'
+XML=False
+X_HEADERS=['X-PINGOTHER', 'Content-Type', 'If-Match']
 
 RESOURCE_METHODS = ['GET', 'POST', 'DELETE']
 ITEM_METHODS = ['GET', 'PATCH', 'PUT', 'DELETE']
@@ -15,19 +17,24 @@ DOMAIN = {
         'allowed_filters' : ['*'],
         'sorting': True,
         'resource_methods': ['GET', 'POST'],
+    },
+    'days': {
+        'allowed_filters' : ['*'],
+        'sorting': True,
+        'resource_methods': ['GET', 'POST', 'DELETE'],
     }
 }
 
-first = {
-    'datasource': {
-        'source': 'mapped',
-        'aggregation': {
-            'pipeline': [
-                {"$match": "$where$"}
-            ]
-        }
-    }
-}
+# first = {
+#     'datasource': {
+#         'source': 'mapped',
+#         'aggregation': {
+#             'pipeline': [
+#                 {"$match": "$where$"}
+#             ]
+#         }
+#     }
+# }
 # first = {
 #     'datasource': {
 #         'aggregation': {
