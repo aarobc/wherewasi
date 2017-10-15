@@ -8,6 +8,8 @@ SCHEMA_ENDPOINT="first"
 
 X_DOMAINS='*'
 
+RESOURCE_METHODS = ['GET', 'POST', 'DELETE']
+ITEM_METHODS = ['GET', 'PATCH', 'PUT', 'DELETE']
 DOMAIN = {
     'mapped': {
         'allowed_filters' : ['*'],

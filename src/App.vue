@@ -45,9 +45,12 @@
             <div class="row">
                 <b-button @click="air">Fetch</b-button>
                 <b-button @click="addDay">Add</b-button>
+                <b-button @click="makeCsv">to CSV</b-button>
+                <a :href="csv" ref="dll" target="_blank" download="data.csv">test</a>
                 <spinner v-if="loading"></spinner>
             </div>
-            <b-table :items="tdata"></b-table>
+            <b-table :items="tdata" >
+            </b-table>
 
 
 
@@ -60,7 +63,11 @@
     </div>
     <div class="row">
         <div class="timeline">
-            <b-table :items="resTable"></b-table>
+            <b-table :items="resTable" :fields="resTableFields">
+                <template slot="delete" scope="data">
+                    <b-button @click="rm(data)">X</b-button>
+                </template>
+            </b-table>
         </div>
     </div>
   </div>
@@ -70,9 +77,11 @@
 import dateCrap from "./dateCrap.vue"
 import Datepicker from 'vuejs-datepicker'
 import moment from 'moment'
+require ('moment-duration-format')
 import timeline from "./timeline.vue"
 import Spinner from 'vue-simple-spinner'
 import _ from 'lodash'
+import axios from 'axios'
 
 export default {
   name: 'app',
@@ -84,6 +93,7 @@ export default {
   },
   data () {
     return {
+      csv: "",
       allInRange: false,
       url:'http://localhost:5000/',
       loading: false,
@@ -107,7 +117,30 @@ export default {
 
   },
   methods: {
+      rm(row){
+        this.report.splice(row.index, 1)
+      },
+      makeCsv(){
+          let keys = Object.keys(this.resTable[0])
+          let h = keys.join(',')
+          console.log(h)
+          let lineArray = ["data:text/csv;charset=utf-8," + h];
+          this.resTable.forEach((v, index) => {
+              let infoArray = Object.values(v).map(JSON.stringify)
+              let line = infoArray.join(",")
+              lineArray.push(line)
+          })
+          let csvContent = lineArray.join("\n")
+          this.csv = encodeURI(csvContent)
+          console.log(this.$refs.dll)
+          // this.$refs.dll.click()
+      },
       addDay(){
+          console.log(this.fd)
+          axios.post(this.url + 'days', this.fd)
+          .then(out => {
+              console.log(out)
+          })
         this.report.push(this.fd)
       },
       air(){
@@ -304,9 +337,7 @@ export default {
           // TODO: complain about moment durations in this situation
           let sd = moment.duration(Math.abs(start))
           let ed = moment.duration(Math.abs(end))
-          console.log(sd.humanize(), ed.humanize())
 
-          console.log(sd)
 
           this.range.start = d.clone().add(sd).local().toDate()
           this.range.end = d.clone().add(ed).local().toDate()
@@ -325,13 +356,19 @@ export default {
       duration(){
           return moment.duration(moment(this.range.start).diff(this.range.end))
       },
+      total(){
+          return this.report.reduce((carry, item) => {
+              return carry.add(item.duration)
+          }, moment.duration())
+      },
       fd(){
           return {
               day: this.day,
               start: moment(this.range.start).format("h:mm a"),
               end: moment(this.range.end).format("h:mm a"),
               maxAlt: this.maxAlt,
-              duration: moment.duration(moment(this.range.start).diff(this.range.end)),
+              duration: moment.duration(moment(this.range.end).diff(this.range.start)),
+              total: this.total.format("h:mm a"),
           }
       },
       tdata(){
@@ -341,7 +378,8 @@ export default {
               {Param: 'Start', value: this.fd.start},
               {Param: 'End', value: this.fd.end},
               // {Param: 'Max Altitude', value: this.maxAlt},
-              {Param: 'Duration', value: this.fd.duration.humanize()},
+              {Param: 'Duration', value: this.fd.duration.format('h [hrs], m [min]')},
+              {Param: 'Total', value: moment.duration(this.total).format('h [hrs], m [min]')},
           ]
           if(this.maxAlt){
               res.push({Param: 'Max Altitude', value: this.maxAlt})
@@ -354,11 +392,22 @@ export default {
                   Day: moment(item.day).format('d MMM YYYY'),
                   Start: item.start,
                   End: item.end,
-                  Duration: moment.duration(item.duration).humanize(),
+                  Duration: moment.duration(item.duration).format('h [hrs], m [min]'),
                   MaxAlt: item.maxAlt,
               }
           })
           return []
+      },
+      resTableFields(){
+          let fields = []
+          try{
+              fields = Object.keys(this.resTable[0])
+              fields.push('delete')
+          }
+          catch(e) {
+              return []
+          }
+              return fields
       },
       maxAlt(){
           // let s = this.points.concat().

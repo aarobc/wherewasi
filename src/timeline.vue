@@ -88,8 +88,9 @@ export default {
   },
   mounted(){
    // create a data set
-    let start = moment(this.options.start).add(16, 'hours')
-    let end = moment(this.options.start).add(21, 'hours')
+    let start = moment(this.range.start)
+    let end = moment(this.range.end)
+
     // this.localCopy = JSON.parse(JSON.stringify(this.points))
 
     // let data = {
@@ -155,31 +156,22 @@ export default {
 
           let ux = moment(v).unix()
           let nb = _.sortBy(this.points, ['unix'])
-          // console.log(nb)
-          // let dex = _.sortedIndexBy(nb, {unix: ux}, 'unix')
-          // this.points.sort((a, b) => {
-          //     return a.unix < b.unix
-          // })
           // it's 2 in the moring
           let dex = _.sortedIndexBy(nb, {unix: ux}, 'unix')
           dex--
           dex = (dex == -1)? 0: dex
 
-          if(this.points.length <= dex){
-              console.log('early', this.points.length, dex)
+          if(this.points.length -1 <= dex){
               return this.points[dex]
           }
 
           let da = ux - this.points[dex].unix
           let ta = this.points[dex + 1].unix - ux
-          console.log(da, ta)
           if(da > ta){
-              // console.log(da, ta)
               dex++
           }
           this.closest = dex
           return this.points[dex]
-
       },
       copy(val){
         return JSON.parse(JSON.stringify(val))
